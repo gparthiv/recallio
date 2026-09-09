@@ -1,0 +1,23 @@
+{
+  "name": "recallio",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A personal knowledge management SaaS",
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "test": "echo \"No tests configured yet\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gparthiv/recallio.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/gparthiv/recallio/issues"
+  },
+  "homepage": "https://github.com/gparthiv/recallio#readme"
+}
