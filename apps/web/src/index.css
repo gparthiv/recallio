@@ -1,0 +1,244 @@
+@import url("https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,slnt,wdth,wght@6..144,-10..0,75..125,100..1000&family=Instrument+Serif:ital@0;1&display=swap");
+
+@import "tailwindcss";
+
+
+/* --------------------------------
+   Theme
+-------------------------------- */
+
+:root {
+  --text: #231d15;
+  --background: #fff5eb;
+  --primary: #fe7139;
+  --secondary: #ff9257;
+  --accent: #fb4d13;
+
+  --surface: #fffaf5;
+  --surface-soft: #fff0e4;
+  --muted: #756b61;
+
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.25rem;
+}
+
+:root[data-theme="dark"] {
+  --text: #eae4dc;
+  --background: #140a00;
+  --primary: #c63901;
+  --secondary: #a83b00;
+  --accent: #ec3e04;
+
+  --surface: #1c1008;
+  --surface-soft: #24150b;
+  --muted: #a99c90;
+}
+
+
+/* --------------------------------
+   Tailwind tokens
+-------------------------------- */
+
+@theme {
+  --font-sans: "Google Sans Flex", sans-serif;
+  --font-logo: "Instrument Serif", serif;
+
+  --color-text: var(--text);
+  --color-background: var(--background);
+  --color-primary: var(--primary);
+  --color-secondary: var(--secondary);
+  --color-accent: var(--accent);
+
+  --color-surface: var(--surface);
+  --color-surface-soft: var(--surface-soft);
+  --color-muted: var(--muted);
+
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+}
+
+
+/* --------------------------------
+   Global
+-------------------------------- */
+
+html,
+body {
+  margin: 0;
+  min-width: 320px;
+
+  font-family: "Google Sans Flex", sans-serif;
+
+  background: var(--background);
+  color: var(--text);
+}
+
+button,
+input,
+textarea,
+select {
+  font-family: inherit;
+}
+
+
+/* --------------------------------
+   Logo
+-------------------------------- */
+
+.logo {
+  font-family: "Instrument Serif", serif;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+}
+
+
+/* --------------------------------
+   Content types
+-------------------------------- */
+
+.content-twitter {
+  background: #cccccc;
+  color: #171717;
+}
+
+.content-youtube {
+  background: #ffb3b3;
+  color: #3d1118;
+}
+
+.content-link {
+  background: #eee6f5;
+  color: #34223f;
+}
+
+.content-note {
+  background: #f4edc9;
+  color: #3d371f;
+}
+
+.content-facebook {
+  background: #dfeaff;
+  color: #183b73;
+}
+
+.content-instagram {
+  background: #f8dce8;
+  color: #5a2340;
+}
+
+.content-flipkart {
+  background: #fff0c7;
+  color: #594000;
+}
+
+.content-amazon {
+  background: #ffe8c7;
+  color: #593a16;
+}
+
+.content-gemini {
+  background: #e4e3ff;
+  color: #30306b;
+}
+
+.content-github {
+  background: #e5e5e3;
+  color: #242424;
+}
+
+.content-googledrive {
+  background: #e1f0df;
+  color: #245329;
+}
+
+.content-linkedin {
+  background: #dcecf8;
+  color: #16476a;
+}
+
+.content-medium {
+  background: #e8e8e6;
+  color: #242424;
+}
+
+.content-openai {
+  background: #dcefe9;
+  color: #16483b;
+}
+
+.content-reddit {
+  background: #ffe1d6;
+  color: #6b2d1b;
+}
+
+.content-wikipedia {
+  background: #e9e9e7;
+  color: #30302d;
+}
+
+.content-claude {
+  background: #f3dfcf;
+  color: #593a27;
+}
+
+
+/* --------------------------------
+   Tiptap
+-------------------------------- */
+
+.tiptap {
+  outline: none;
+}
+
+.tiptap p {
+  margin-bottom: 0.75rem;
+}
+
+.tiptap h2 {
+  margin-top: 1.25rem;
+  margin-bottom: 0.75rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.tiptap ul {
+  list-style: disc;
+  padding-left: 1.5rem;
+}
+
+.tiptap ol {
+  list-style: decimal;
+  padding-left: 1.5rem;
+}
+
+.tiptap blockquote {
+  padding-left: 1rem;
+  color: var(--muted);
+}
+
+
+.content-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(35, 29, 21, 0.2) transparent;
+}
+
+.content-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.content-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.content-scroll::-webkit-scrollbar-thumb {
+  background: rgba(35, 29, 21, 0.2);
+  border-radius: 999px;
+}
+
+.content-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(35, 29, 21, 0.35);
+}
