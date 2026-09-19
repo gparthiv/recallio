@@ -1,16 +1,12 @@
 import { useState, type ReactNode } from "react";
 import EditContentModal from "./EditContentModal";
 import ShareNoteModal from "./ShareNoteModal";
+import ConfirmModal from "./ConfirmModal";
 
 import {
   contentStyles,
   type ContentType,
 } from "../config/contentStyles";
-
-interface Tag {
-  _id: string;
-  title: string;
-}
 
 interface Content {
   _id: string;
@@ -18,7 +14,6 @@ interface Content {
   type: ContentType;
   title: string;
   body?: Record<string, any>;
-  tags: Tag[];
   createdAt?: string;
   shareEnabled?: boolean;
 }
@@ -271,21 +266,6 @@ function ContentViewer({
                 )}
               </div>
             )}
-
-          {/* Tags */}
-
-          {content.tags.length > 0 && (
-            <div className="mt-8 flex flex-wrap gap-2">
-              {content.tags.map((tag) => (
-                <span
-                  key={tag._id}
-                  className="rounded-full bg-black/5 px-2.5 py-1 text-xs opacity-75"
-                >
-                  {tag.title}
-                </span>
-              ))}
-            </div>
-          )}
         </div>
 
         {/* Footer */}
@@ -343,19 +323,31 @@ function ContentCard({
   const [showShareNote, setShowShareNote] =
     useState(false);
 
+  const [showDeleteModal, setShowDeleteModal] =
+    useState(false);
+
+  const [deleting, setDeleting] =
+    useState(false);
+
   const style = contentStyles[content.type];
 
   const spanTwoRows =
     shouldSpanTwoRows(content);
 
   function handleDelete() {
-    const confirmed = window.confirm(
-      "Delete this saved content?"
-    );
+    setShowDeleteModal(true);
+  }
 
-    if (confirmed) {
+  function handleConfirmDelete() {
+    setDeleting(true);
+
+    try {
       onDelete(content._id);
+
+      setShowDeleteModal(false);
       setShowViewer(false);
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -365,7 +357,9 @@ function ContentCard({
 
       <article
         onClick={() => setShowViewer(true)}
-        className={`group flex min-h-[180px] cursor-pointer flex-col rounded-xl p-4 transition-shadow duration-200 hover:shadow-lg md:min-h-[210px] md:p-5 ${style.background} ${style.text} ${
+        className={`group flex min-h-[180px] cursor-pointer flex-col rounded-xl p-4 transition-shadow duration-200 hover:shadow-lg md:min-h-[210px] md:p-5 ${
+          style.background
+        } ${style.text} ${
           spanTwoRows
             ? "md:row-span-2"
             : ""
@@ -428,19 +422,6 @@ function ContentCard({
             </a>
           )}
         </div>
-
-        {/* Tags */}
-
-        <div className="mt-auto hidden flex-wrap gap-2 pt-8 sm:flex">
-          {content.tags.map((tag) => (
-            <span
-              key={tag._id}
-              className="rounded-full bg-black/5 px-2.5 py-1 text-xs opacity-75"
-            >
-              {tag.title}
-            </span>
-          ))}
-        </div>
       </article>
 
       {/* Content viewer */}
@@ -462,6 +443,22 @@ function ContentCard({
           }}
         />
       )}
+
+      {/* Delete confirmation */}
+
+      <ConfirmModal
+        open={showDeleteModal}
+        title="Delete this content?"
+        message="This saved content will be permanently deleted. This action cannot be undone."
+        confirmText="Delete"
+        loading={deleting}
+        onCancel={() => {
+          if (!deleting) {
+            setShowDeleteModal(false);
+          }
+        }}
+        onConfirm={handleConfirmDelete}
+      />
 
       {/* Edit */}
 

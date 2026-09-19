@@ -68,7 +68,7 @@ export async function getSharedNote(
       shareEnabled: true,
       type: "note",
     })
-      .populate("tags", "title")
+      .populate("title")
       .populate("userId", "username");
 
     if (!note) {
@@ -83,9 +83,6 @@ export async function getSharedNote(
       type: note.type,
       title: note.title,
       body: note.body,
-      tags: (note.tags as any[]).map(
-        (tag: any) => tag.title
-      ),
     };
 
     return res.status(200).json(formattedNote);

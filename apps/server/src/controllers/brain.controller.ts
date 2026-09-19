@@ -71,7 +71,7 @@ export async function getSharedBrain(req: any, res: any): Promise<any> {
     const content = await Content.find({
       userId: user._id,
     })
-      .populate("tags", "title")
+      .populate("title")
       .sort({ createdAt: -1 });
 
     const formattedContent = content.map((item: any) => ({
@@ -80,7 +80,6 @@ export async function getSharedBrain(req: any, res: any): Promise<any> {
       link: item.link,
       title: item.title,
       body: item.type === "note" ? item.body : null,
-      tags: item.tags.map((tag: any) => tag.title),
     }));
 
     return res.status(200).json({

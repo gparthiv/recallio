@@ -22,6 +22,10 @@ const contentTypes = [
   "link",
 ] as const;
 
+const AI_SERVICE_URL =
+  process.env.AI_SERVICE_URL ||
+  "http://localhost:8000";
+
 export const captureContent = async (
   req: Request,
   res: Response
@@ -54,17 +58,73 @@ export const captureContent = async (
     let body = null;
 
     /*
-     * Selected text is saved as a Note.
-     *
-     * If HTML is available, preserve the original
-     * webpage formatting and convert it to Tiptap JSON.
-     *
-     * If HTML is unavailable, fall back to plain text.
+     * Selected text is always saved as a Note.
      */
     if (contentType === "note") {
+      /*
+       * First try AI formatting.
+       */
       if (selectedHtml?.trim()) {
+        try {
+          const aiResponse = await fetch(
+            `${AI_SERVICE_URL}/format`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                text: selectedText || "",
+                html: selectedHtml,
+                page_title: pageTitle || "",
+                source_url: url,
+              }),
+            }
+          );
+
+          if (aiResponse.ok) {
+            const aiData = await aiResponse.json();
+
+            body = aiData.document;
+
+            console.log(
+              "AI formatting successful"
+            );
+          } else {
+            console.error(
+              "AI formatting failed:",
+              await aiResponse.text()
+            );
+          }
+        } catch (error) {
+          console.error(
+            "AI service unavailable:",
+            error
+          );
+        }
+      }
+
+      /*
+       * Fallback 1:
+       * Use our deterministic HTML → Tiptap converter.
+       */
+      if (!body && selectedHtml?.trim()) {
+        console.log(
+          "Using HTML formatting fallback"
+        );
+
         body = htmlToTiptap(selectedHtml);
-      } else if (selectedText?.trim()) {
+      }
+
+      /*
+       * Fallback 2:
+       * Save plain text as a Tiptap paragraph.
+       */
+      if (!body && selectedText?.trim()) {
+        console.log(
+          "Using plain text fallback"
+        );
+
         body = {
           type: "doc",
           content: [
@@ -82,11 +142,65 @@ export const captureContent = async (
       }
     }
 
+    let generatedTitle: string | null = null;
+
+    try {
+      const autofillText =
+        selectedText?.trim() ||
+        pageTitle?.trim() ||
+        url;
+
+      const aiResponse = await fetch(
+        `${AI_SERVICE_URL}/autofill`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            text: autofillText,
+            page_title: pageTitle || "",
+            source_url: url,
+            content_type: contentType,
+          }),
+        }
+      );
+
+      if (aiResponse.ok) {
+        const aiData = await aiResponse.json();
+
+        if (
+          typeof aiData.title === "string" &&
+          aiData.title.trim()
+        ) {
+          generatedTitle = aiData.title.trim();
+
+          console.log(
+            "AI title generated:",
+            generatedTitle
+          );
+        }
+      } else {
+        console.error(
+          "AI autofill failed:",
+          await aiResponse.text()
+        );
+      }
+    } catch (error) {
+      console.error(
+        "AI autofill unavailable:",
+        error
+      );
+    }
+
     const content = await Content.create({
       userId: req.userId,
       type: contentType,
       link: url,
-      title: pageTitle || url,
+      title:
+        generatedTitle ||
+        pageTitle ||
+        url,
       body,
     });
 
@@ -95,7 +209,10 @@ export const captureContent = async (
       content,
     });
   } catch (error) {
-    console.error("Capture error:", error);
+    console.error(
+      "Capture error:",
+      error
+    );
 
     return res.status(500).json({
       message: "Failed to save capture",

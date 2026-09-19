@@ -63,12 +63,6 @@ const contentSchema = new Schema({
     default: null,
   },
 
-  tags: [
-    {
-      type: Schema.Types.ObjectId,
-      ref: "Tag",
-    }
-  ],
 
   userId: {
     type: Schema.Types.ObjectId,
@@ -97,10 +91,3 @@ const contentSchema = new Schema({
 }, { timestamps: true });
 
 export const Content = model('Content', contentSchema);
-
-// TAG MODEL
-const tagSchema = new Schema({
-  title: { type: String, required: true, unique: true }
-})
-
-export const Tag = model('Tag', tagSchema);

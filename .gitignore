@@ -5,6 +5,7 @@ node_modules/
 dist/
 
 # Environment variables
+.venv/
 .env
 .env.*
 !.env.example

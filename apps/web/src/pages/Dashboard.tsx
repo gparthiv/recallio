@@ -10,18 +10,12 @@ import {
   type ContentType,
 } from "../config/contentStyles";
 
-interface Tag {
-  _id: string;
-  title: string;
-}
-
 interface Content {
   _id: string;
   link: string | null;
   type: ContentType;
   title: string;
   body?: Record<string, any>;
-  tags: Tag[];
   createdAt?: string;
   shareEnabled?: boolean;
 }
@@ -51,10 +45,12 @@ const filters: { value: FilterType; label: string }[] = [
 
 export default function Dashboard() {
   const [content, setContent] = useState<Content[]>([]);
+
   const [activeFilter, setActiveFilter] =
     useState<FilterType>("all");
 
   const [loading, setLoading] = useState(true);
+
   const [error, setError] = useState("");
 
   const [showAddContent, setShowAddContent] =
@@ -79,7 +75,7 @@ export default function Dashboard() {
 
       setError(
         err.response?.data?.message ||
-        "Unable to load your saved content."
+          "Unable to load your saved content."
       );
     } finally {
       setLoading(false);
@@ -112,12 +108,13 @@ export default function Dashboard() {
     } catch (err: any) {
       console.error(err);
 
-      alert(
+      setError(
         err.response?.data?.message ||
-        "Unable to delete this content."
+          "Unable to delete this content."
       );
     }
   };
+
   const visibleFilters = filters.filter((filter) => {
     if (filter.value === "all") {
       return true;
@@ -127,10 +124,31 @@ export default function Dashboard() {
       (item) => item.type === filter.value
     );
   });
+
   return (
     <div className="min-h-screen bg-background text-text">
 
+      {/* Delete / general error notification */}
+
+      {error && (
+        <div className="fixed right-5 top-5 z-[110] w-[calc(100%-2.5rem)] max-w-sm rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700 shadow-lg">
+          <div className="flex items-start justify-between gap-4">
+            <span>{error}</span>
+
+            <button
+              type="button"
+              onClick={() => setError("")}
+              className="shrink-0 text-lg leading-none text-red-500 transition hover:text-red-700"
+              aria-label="Close"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
+
       <header className="sticky top-0 z-40 bg-background">
         <div className="mx-auto flex max-w-[1500px] items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
 
@@ -170,6 +188,7 @@ export default function Dashboard() {
       <main className="mx-auto grid max-w-[1500px] grid-cols-1 lg:grid-cols-[220px_minmax(0,1fr)]">
 
         {/* Sidebar */}
+
         <aside className="sticky top-[88px] hidden h-[calc(100vh-88px)] overflow-y-auto px-5 py-8 lg:block">
 
           <nav className="space-y-1">
@@ -182,9 +201,9 @@ export default function Dashboard() {
                 filter.value === "all"
                   ? content.length
                   : content.filter(
-                    (item) =>
-                      item.type === filter.value
-                  ).length;
+                      (item) =>
+                        item.type === filter.value
+                    ).length;
 
               return (
                 <button
@@ -193,20 +212,23 @@ export default function Dashboard() {
                   onClick={() =>
                     setActiveFilter(filter.value)
                   }
-                  className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition ${active
+                  className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition ${
+                    active
                       ? "bg-primary font-medium text-white"
                       : "text-muted hover:bg-surface-soft hover:text-text"
-                    }`}
+                  }`}
                 >
                   <span className="flex items-center gap-2">
 
                     {filter.value !== "all" && (
                       <img
                         src={
-                          contentStyles[filter.value].icon
+                          contentStyles[
+                            filter.value
+                          ].icon
                         }
                         alt=""
-                        className="h-4 w-4"
+                        className="h-4 w-4 object-contain"
                       />
                     )}
 
@@ -214,10 +236,11 @@ export default function Dashboard() {
                   </span>
 
                   <span
-                    className={`text-xs ${active
+                    className={`text-xs ${
+                      active
                         ? "text-white/70"
                         : "text-muted"
-                      }`}
+                    }`}
                   >
                     {count}
                   </span>
@@ -238,9 +261,11 @@ export default function Dashboard() {
         </aside>
 
         {/* Main */}
+
         <section className="min-w-0 rounded-tl-3xl px-4 py-6 sm:px-6 sm:py-8 lg:px-10 lg:py-10">
 
           {/* Mobile filters */}
+
           <div className="sticky top-[88px] z-30 -mx-4 mb-6 overflow-x-auto bg-background px-4 py-3 lg:hidden">
 
             <div className="flex min-w-max gap-2">
@@ -256,18 +281,22 @@ export default function Dashboard() {
                     onClick={() =>
                       setActiveFilter(filter.value)
                     }
-                    className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium transition-shadow ${active
+                    className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium transition-shadow ${
+                      active
                         ? "bg-primary text-white"
                         : "bg-surface-soft text-muted hover:text-text"
-                      }`}
+                    }`}
                   >
+
                     {filter.value !== "all" && (
                       <img
                         src={
-                          contentStyles[filter.value].icon
+                          contentStyles[
+                            filter.value
+                          ].icon
                         }
                         alt=""
-                        className="h-3.5 w-3.5"
+                        className="h-3.5 w-3.5 object-contain"
                       />
                     )}
 
@@ -280,6 +309,7 @@ export default function Dashboard() {
           </div>
 
           {/* Page heading */}
+
           <div className="sticky top-[70px] z-30 -mx-4 mb-8 bg-background px-4 py-4 sm:-mx-6 sm:px-6 lg:-mx-10 lg:px-10">
 
             <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
@@ -298,6 +328,7 @@ export default function Dashboard() {
           </div>
 
           {/* Loading */}
+
           {loading && (
             <div className="rounded-xl bg-surface p-8 text-sm text-muted">
               Loading your library...
@@ -305,6 +336,7 @@ export default function Dashboard() {
           )}
 
           {/* Error */}
+
           {!loading && error && (
             <div className="rounded-xl bg-red-50 p-5">
 
@@ -324,6 +356,7 @@ export default function Dashboard() {
           )}
 
           {/* Empty */}
+
           {!loading &&
             !error &&
             filteredContent.length === 0 && (
@@ -355,6 +388,7 @@ export default function Dashboard() {
             )}
 
           {/* Content */}
+
           {!loading &&
             !error &&
             filteredContent.length > 0 && (
@@ -378,20 +412,26 @@ export default function Dashboard() {
 
       {showAddContent && (
         <AddContentModal
-          onClose={() => setShowAddContent(false)}
+          onClose={() =>
+            setShowAddContent(false)
+          }
           onAdded={loadContent}
         />
       )}
 
       {showShareBrain && (
         <ShareBrainModal
-          onClose={() => setShowShareBrain(false)}
+          onClose={() =>
+            setShowShareBrain(false)
+          }
         />
       )}
 
       {showSearchBrain && (
         <SearchBrainModal
-          onClose={() => setShowSearchBrain(false)}
+          onClose={() =>
+            setShowSearchBrain(false)
+          }
         />
       )}
 

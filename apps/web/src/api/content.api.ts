@@ -8,7 +8,6 @@ export interface AddContentData {
   link?: string;
   title: string;
   body?: Record<string, unknown>;
-  tags: string[];
 }
 
 export interface UpdateContentData {
@@ -16,7 +15,6 @@ export interface UpdateContentData {
   title: string;
   link?: string;
   body?: Record<string, unknown>;
-  tags: string[];
 }
 
 export async function getContent() {

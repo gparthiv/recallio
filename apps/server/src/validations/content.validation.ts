@@ -35,8 +35,4 @@ export const ContentSchema = z.object({
     .max(200, "Title is too long"),
 
   body: richTextSchema.optional(),
-
-  tags: z
-    .array(z.string().trim().min(1))
-    .max(10, "Maximum 10 tags allowed"),
 });

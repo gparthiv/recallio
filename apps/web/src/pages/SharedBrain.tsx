@@ -14,7 +14,6 @@ type SharedContent = {
   link: string | null;
   title: string;
   body: Record<string, any> | null;
-  tags: string[];
 };
 
 type SharedBrainData = {
@@ -338,19 +337,6 @@ function SharedBrain() {
                         </a>
                       )}
                     </div>
-
-                    {/* Tags */}
-                    <div className="mt-auto flex flex-wrap gap-2 pt-8">
-                      {item.tags.map((tag) => (
-                        <span
-                          key={tag}
-                          className="rounded-full bg-black/5 px-2.5 py-1 text-xs opacity-75"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-
                   </article>
                 );
               })}
@@ -444,19 +430,6 @@ function SharedBrain() {
                   </a>
                 )}
 
-                {/* Tags */}
-                {selectedContent.tags.length > 0 && (
-                  <div className="mt-8 flex flex-wrap gap-2">
-                    {selectedContent.tags.map((tag) => (
-                      <span
-                        key={tag}
-                        className="rounded-full bg-black/5 px-3 py-1.5 text-xs opacity-75"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                )}
 
               </div>
 

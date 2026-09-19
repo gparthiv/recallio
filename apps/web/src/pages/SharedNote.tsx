@@ -8,7 +8,6 @@ type SharedNoteData = {
   type: "note";
   title: string;
   body: Record<string, any>;
-  tags: string[];
 };
 
 function renderNode(node: any, key: number): ReactNode {
@@ -187,19 +186,6 @@ function SharedNote() {
             <p className="mt-3 text-sm text-muted">
               Shared by {note.username}
             </p>
-
-            {note.tags.length > 0 && (
-              <div className="mt-5 flex flex-wrap gap-2">
-                {note.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="rounded-full bg-black/5 px-2.5 py-1 text-xs text-text/65"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            )}
           </div>
         </header>
 

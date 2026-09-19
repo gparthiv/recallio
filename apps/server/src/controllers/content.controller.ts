@@ -1,4 +1,4 @@
-import { Content, Tag } from "../models/Schemas.js";
+import { Content } from "../models/Schemas.js";
 import { ContentSchema } from "../validations/content.validation.js";
 
 export async function addContent(req: any, res: any): Promise<any> {
@@ -15,7 +15,7 @@ export async function addContent(req: any, res: any): Promise<any> {
       });
     }
 
-    const { type, link, title, body, tags } = result.data;
+    const { type, link, title, body} = result.data;
 
     // Check if link or note
     if (type === "note" && !body) {
@@ -30,23 +30,6 @@ export async function addContent(req: any, res: any): Promise<any> {
       });
     }
 
-    // Get the tags uniformed
-    const normalizedTags = tags.map((tag) =>
-      tag.trim().toLowerCase()
-    );
-
-    // Find existing tags or create new ones
-    const tagId = await Promise.all(
-      normalizedTags.map(async (t) => {
-        let tag = await Tag.findOne({ title: t });
-
-        if (!tag) {
-          tag = await Tag.create({ title: t });
-        }
-
-        return tag._id;
-      })
-    );
 
     // Create content
     const content = await Content.create({
@@ -54,7 +37,6 @@ export async function addContent(req: any, res: any): Promise<any> {
       link: type === "note" ? null : link!,
       title,
       body: type === "note" ? body! : null,
-      tags: tagId,
       userId,
     });
 
@@ -80,7 +62,7 @@ export async function getContent(req: any, res: any): Promise<any> {
 
     // Find all content belonging to this user
     const content = await Content.find({ userId })
-      .populate("tags", "title")
+      .populate("title")
       .sort({ createdAt: -1 });
 
     return res.status(200).json({
@@ -120,7 +102,7 @@ export async function updateContent(
       });
     }
 
-    const { title, link, body, tags } = result.data;
+    const { title, link, body } = result.data;
 
     // 4. Find existing content
     const content = await Content.findById(contentId);
@@ -152,32 +134,8 @@ export async function updateContent(
       });
     }
 
-    // 7. Normalize tags
-    const normalizedTags = tags.map((tag) =>
-      tag.trim().toLowerCase()
-    );
-
-    // 8. Find existing tags or create new ones
-    const tagIds = await Promise.all(
-      normalizedTags.map(async (tagTitle) => {
-        let tag = await Tag.findOne({
-          title: tagTitle,
-        });
-
-        if (!tag) {
-          tag = await Tag.create({
-            title: tagTitle,
-          });
-        }
-
-        return tag._id;
-      })
-    );
-
     // 9. Update content
     content.title = title;
-
-    content.tags = tagIds;
 
     if (content.type === "note") {
       content.link = null;
@@ -189,8 +147,8 @@ export async function updateContent(
 
     await content.save();
 
-    // 10. Populate tags before returning
-    await content.populate("tags", "title");
+    // 10. Populate before returning
+    await content.populate("title");
 
     return res.status(200).json({
       message: "Content updated successfully",

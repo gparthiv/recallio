@@ -6,18 +6,12 @@ import {
   type ContentType,
 } from "../config/contentStyles";
 
-interface Tag {
-  _id: string;
-  title: string;
-}
-
 interface Content {
   _id: string;
   link: string | null;
   type: ContentType;
   title: string;
   body?: Record<string, any>;
-  tags: Tag[];
 }
 
 interface EditContentModalProps {
@@ -38,9 +32,7 @@ export default function EditContentModal({
     content.body || null
   );
 
-  const [tags, setTags] = useState(
-    content.tags.map((tag) => tag.title).join(", ")
-  );
+
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -67,11 +59,6 @@ export default function EditContentModal({
       return;
     }
 
-    const tagList = tags
-      .split(",")
-      .map((tag) => tag.trim())
-      .filter(Boolean);
-
     try {
       setLoading(true);
 
@@ -91,8 +78,6 @@ export default function EditContentModal({
           content.type === "note"
             ? body ?? undefined
             : undefined,
-
-        tags: tagList,
       });
 
       onUpdated(response.content || response);
@@ -217,31 +202,6 @@ export default function EditContentModal({
                 </div>
               </div>
             )}
-
-            {/* Tags */}
-            <div>
-              <label
-                htmlFor="edit-tags"
-                className="mb-2 block text-sm font-medium"
-              >
-                Tags
-              </label>
-
-              <input
-                id="edit-tags"
-                type="text"
-                value={tags}
-                onChange={(event) =>
-                  setTags(event.target.value)
-                }
-                placeholder="react, learning, ideas"
-                className="w-full rounded-xl bg-surface px-4 py-3 text-sm text-text outline-none transition-shadow placeholder:text-muted/60 focus:shadow-md"
-              />
-
-              <p className="mt-2 text-xs text-muted">
-                Separate tags with commas.
-              </p>
-            </div>
 
             {/* Error */}
             {error && (

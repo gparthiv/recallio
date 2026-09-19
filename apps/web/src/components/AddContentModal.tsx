@@ -39,7 +39,6 @@ export default function AddContentModal({
 
   const [title, setTitle] = useState("");
   const [link, setLink] = useState("");
-  const [tags, setTags] = useState("");
 
   const [body, setBody] = useState<Record<string, unknown> | null>(
     null
@@ -68,11 +67,6 @@ export default function AddContentModal({
       return;
     }
 
-    const tagList = tags
-      .split(",")
-      .map((tag) => tag.trim())
-      .filter(Boolean);
-
     try {
       setLoading(true);
 
@@ -89,8 +83,6 @@ export default function AddContentModal({
           type === "note"
             ? body ?? undefined
             : undefined,
-
-        tags: tagList,
       });
 
       onAdded();
@@ -249,31 +241,6 @@ export default function AddContentModal({
             <span className="text-xs font-medium">
               Saving as {selectedStyle.label}
             </span>
-          </div>
-
-          {/* Tags */}
-          <div className="mt-5">
-            <label
-              htmlFor="content-tags"
-              className="text-sm font-medium text-text"
-            >
-              Tags
-            </label>
-
-            <input
-              id="content-tags"
-              type="text"
-              value={tags}
-              onChange={(event) =>
-                setTags(event.target.value)
-              }
-              placeholder="react, ai, design"
-              className="mt-2 w-full rounded-xl bg-surface px-4 py-3 text-sm text-text outline-none transition-shadow placeholder:text-muted focus:shadow-md"
-            />
-
-            <p className="mt-1.5 text-xs text-muted">
-              Separate multiple tags with commas.
-            </p>
           </div>
 
           {/* Error */}
