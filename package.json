@@ -1,5 +1,5 @@
 {
-  "name": "recallio",
+  "name": "synapse",
   "version": "1.0.0",
   "private": true,
   "description": "A personal knowledge management SaaS",
@@ -11,13 +11,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/gparthiv/recallio.git"
+    "url": "git+https://github.com/gparthiv/synapse.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/gparthiv/recallio/issues"
+    "url": "https://github.com/gparthiv/synapse/issues"
   },
-  "homepage": "https://github.com/gparthiv/recallio#readme"
+  "homepage": "https://github.com/gparthiv/synapse#readme"
 }
