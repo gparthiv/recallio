@@ -3,7 +3,25 @@ import * as z from "zod";
 const richTextSchema = z.record(z.string(), z.any());
 
 export const ContentSchema = z.object({
-  type: z.enum(["document", "tweet", "youtube", "link", "note"]),
+  type: z.enum([
+    "note",
+    "youtube",
+    "tweet",
+    "instagram",
+    "facebook",
+    "github",
+    "reddit",
+    "amazon",
+    "flipkart",
+    "googleDrive",
+    "linkedin",
+    "medium",
+    "wikipedia",
+    "openai",
+    "claude",
+    "gemini",
+    "link",
+  ]),
 
   link: z
     .string()

@@ -5,6 +5,7 @@ export async function addContent(req: any, res: any): Promise<any> {
   try {
     // Get authenticated userID from middleware
     const userId = req.userId;
+
     const result = ContentSchema.safeParse(req.body);
 
     if (!result.success) {
@@ -16,7 +17,7 @@ export async function addContent(req: any, res: any): Promise<any> {
 
     const { type, link, title, body, tags } = result.data;
 
-    // check if link or note
+    // Check if link or note
     if (type === "note" && !body) {
       return res.status(400).json({
         message: "Note body is required",
@@ -29,15 +30,20 @@ export async function addContent(req: any, res: any): Promise<any> {
       });
     }
 
-    // get the tags uniformed
-    const normalizedTags = tags.map((tag) => tag.trim().toLowerCase());
+    // Get the tags uniformed
+    const normalizedTags = tags.map((tag) =>
+      tag.trim().toLowerCase()
+    );
+
     // Find existing tags or create new ones
     const tagId = await Promise.all(
       normalizedTags.map(async (t) => {
         let tag = await Tag.findOne({ title: t });
+
         if (!tag) {
           tag = await Tag.create({ title: t });
         }
+
         return tag._id;
       })
     );
@@ -51,6 +57,7 @@ export async function addContent(req: any, res: any): Promise<any> {
       tags: tagId,
       userId,
     });
+
     // Return created content
     return res.status(201).json({
       message: "Content added successfully",
@@ -68,15 +75,14 @@ export async function addContent(req: any, res: any): Promise<any> {
 // READ CONTENT
 export async function getContent(req: any, res: any): Promise<any> {
   try {
-    // 1. Get authenticated user's ID
+    // Get authenticated user's ID
     const userId = req.userId;
 
-    // 2. Find all content belonging to this user
+    // Find all content belonging to this user
     const content = await Content.find({ userId })
       .populate("tags", "title")
       .sort({ createdAt: -1 });
 
-    // 3. Return content
     return res.status(200).json({
       content,
     });
@@ -89,8 +95,121 @@ export async function getContent(req: any, res: any): Promise<any> {
   }
 }
 
+// UPDATE CONTENT
+export async function updateContent(
+  req: any,
+  res: any
+): Promise<any> {
+  try {
+    // 1. Get authenticated user's ID
+    const userId = req.userId;
 
-export async function deleteContent(req: any, res: any): Promise<any> {
+    // 2. Get content ID from URL
+    const { contentId } = req.params;
+
+    // 3. Validate request body
+    const result = ContentSchema.safeParse({
+      ...req.body,
+      type: req.body.type,
+    });
+
+    if (!result.success) {
+      return res.status(400).json({
+        message: "Invalid content",
+        errors: result.error.issues[0]?.message,
+      });
+    }
+
+    const { title, link, body, tags } = result.data;
+
+    // 4. Find existing content
+    const content = await Content.findById(contentId);
+
+    if (!content) {
+      return res.status(404).json({
+        message: "Content not found",
+      });
+    }
+
+    // 5. Check ownership
+    if (content.userId.toString() !== userId.toString()) {
+      return res.status(403).json({
+        message:
+          "You do not have permission to edit this content",
+      });
+    }
+
+    // 6. Validate link/note requirements
+    if (content.type === "note" && !body) {
+      return res.status(400).json({
+        message: "Note body is required",
+      });
+    }
+
+    if (content.type !== "note" && !link) {
+      return res.status(400).json({
+        message: "Link is required",
+      });
+    }
+
+    // 7. Normalize tags
+    const normalizedTags = tags.map((tag) =>
+      tag.trim().toLowerCase()
+    );
+
+    // 8. Find existing tags or create new ones
+    const tagIds = await Promise.all(
+      normalizedTags.map(async (tagTitle) => {
+        let tag = await Tag.findOne({
+          title: tagTitle,
+        });
+
+        if (!tag) {
+          tag = await Tag.create({
+            title: tagTitle,
+          });
+        }
+
+        return tag._id;
+      })
+    );
+
+    // 9. Update content
+    content.title = title;
+
+    content.tags = tagIds;
+
+    if (content.type === "note") {
+      content.link = null;
+      content.body = body!;
+    } else {
+      content.link = link!;
+      content.body = null;
+    }
+
+    await content.save();
+
+    // 10. Populate tags before returning
+    await content.populate("tags", "title");
+
+    return res.status(200).json({
+      message: "Content updated successfully",
+      content,
+    });
+  } catch (err: any) {
+    console.error("Update content error:", err.message);
+
+    return res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+}
+
+// DELETE CONTENT
+export async function deleteContent(
+  req: any,
+  res: any
+): Promise<any> {
   try {
     // 1. Get authenticated user's ID
     const userId = req.userId;
@@ -108,9 +227,12 @@ export async function deleteContent(req: any, res: any): Promise<any> {
     }
 
     // 4. Check ownership
-    if (content.userId.toString() !== userId.toString()) {
+    if (
+      content.userId.toString() !== userId.toString()
+    ) {
       return res.status(403).json({
-        message: "You do not have permission to delete this content",
+        message:
+          "You do not have permission to delete this content",
       });
     }
 

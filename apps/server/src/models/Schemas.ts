@@ -22,11 +22,23 @@ export const Url = model('Url', urlSchema);
 
 // CONTENT MODEL
 const contentTypes = [
-  "document",
-  "tweet",
+  "note",
   "youtube",
+  "tweet",
+  "instagram",
+  "facebook",
+  "github",
+  "reddit",
+  "amazon",
+  "flipkart",
+  "googleDrive",
+  "linkedin",
+  "medium",
+  "wikipedia",
+  "openai",
+  "claude",
+  "gemini",
   "link",
-  "note"
 ];
 
 const contentSchema = new Schema({

@@ -79,6 +79,7 @@ export async function getSharedBrain(req: any, res: any): Promise<any> {
       type: item.type,
       link: item.link,
       title: item.title,
+      body: item.type === "note" ? item.body : null,
       tags: item.tags.map((tag: any) => tag.title),
     }));
 
