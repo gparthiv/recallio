@@ -1,6 +1,10 @@
 import { Content } from "../models/Schemas.js";
 import { ContentSchema } from "../validations/content.validation.js";
 
+const AI_SERVICE_URL =
+  process.env.AI_SERVICE_URL ||
+  "http://localhost:8000";
+
 export async function addContent(req: any, res: any): Promise<any> {
   try {
     // Get authenticated userID from middleware
@@ -15,7 +19,7 @@ export async function addContent(req: any, res: any): Promise<any> {
       });
     }
 
-    const { type, link, title, body} = result.data;
+    const { type, link, title, body } = result.data;
 
     // Check if link or note
     if (type === "note" && !body) {
@@ -39,6 +43,45 @@ export async function addContent(req: any, res: any): Promise<any> {
       body: type === "note" ? body! : null,
       userId,
     });
+
+    try {
+      const ragResponse = await fetch(
+        `${AI_SERVICE_URL}/rag/ingest`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            contentId: content._id.toString(),
+            userId: userId.toString(),
+            title: content.title,
+            contentType: content.type,
+            sourceUrl: content.link,
+            body: content.body,
+          }),
+        }
+      );
+
+      if (!ragResponse.ok) {
+        console.error(
+          "RAG ingestion failed:",
+          await ragResponse.text()
+        );
+      } else {
+        const ragResult = await ragResponse.json();
+
+        console.log(
+          "RAG ingestion result:",
+          ragResult
+        );
+      }
+    } catch (error) {
+      console.error(
+        "RAG ingestion request failed:",
+        error
+      );
+    }
 
     // Return created content
     return res.status(201).json({
@@ -146,7 +189,42 @@ export async function updateContent(
     }
 
     await content.save();
+    try {
+      const ragResponse = await fetch(
+        `${AI_SERVICE_URL}/rag/content/${contentId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            contentId,
+            userId: userId.toString(),
+            title: content.title,
+            contentType: content.type,
+            sourceUrl: content.link,
+            body: content.body,
+          }),
+        }
+      );
 
+      if (!ragResponse.ok) {
+        console.error(
+          "RAG update failed:",
+          await ragResponse.text()
+        );
+      } else {
+        console.log(
+          "RAG update result:",
+          await ragResponse.json()
+        );
+      }
+    } catch (error) {
+      console.error(
+        "RAG update request failed:",
+        error
+      );
+    }
     // 10. Populate before returning
     await content.populate("title");
 
@@ -197,6 +275,33 @@ export async function deleteContent(
     // 5. Delete content
     await Content.findByIdAndDelete(contentId);
 
+    try {
+      const ragResponse = await fetch(
+        `${AI_SERVICE_URL}/rag/content/${contentId}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      if (!ragResponse.ok) {
+        console.error(
+          "RAG deletion failed:",
+          await ragResponse.text()
+        );
+      } else {
+        const ragResult = await ragResponse.json();
+
+        console.log(
+          "RAG deletion result:",
+          ragResult
+        );
+      }
+    } catch (error) {
+      console.error(
+        "RAG deletion request failed:",
+        error
+      );
+    }
     // 6. Return success
     return res.status(200).json({
       message: "Content deleted successfully",
