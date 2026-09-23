@@ -1,8 +1,8 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import EditContentModal from "./EditContentModal";
 import ShareNoteModal from "./ShareNoteModal";
 import ConfirmModal from "./ConfirmModal";
-
+import { X } from 'lucide-react';
 import {
   contentStyles,
   type ContentType,
@@ -21,6 +21,8 @@ interface Content {
 interface ContentCardProps {
   content: Content;
   onDelete: (contentId: string) => void;
+  openContentId?: string | null;
+  onUpdated: (updatedContent: Content) => void;
 }
 
 /* -------------------- Helpers -------------------- */
@@ -172,12 +174,21 @@ function renderNoteNode(
 
     case "hardBreak":
       return <br />;
+    case "codeBlock":
+      return (
+        <pre className="my-5 overflow-x-auto rounded-xl bg-black/10 p-4 text-sm leading-6">
+          <code>
+            {node.content
+              ?.map((child: any) => child.text || "")
+              .join("")}
+          </code>
+        </pre>
+      );
 
     default:
       return <>{children}</>;
   }
 }
-
 /* -------------------- Viewer -------------------- */
 
 function ContentViewer({
@@ -195,16 +206,47 @@ function ContentViewer({
 }) {
   const style = contentStyles[content.type];
 
+  const viewerRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    viewerRef.current?.focus();
+  }, []);
+
+  function handleSelectAll(
+    event: React.KeyboardEvent<HTMLDivElement>
+  ) {
+    if (
+      (event.ctrlKey || event.metaKey) &&
+      event.key.toLowerCase() === "a"
+    ) {
+      event.preventDefault();
+
+      if (!contentRef.current) {
+        return;
+      }
+
+      const selection = window.getSelection();
+      const range = document.createRange();
+
+      range.selectNodeContents(contentRef.current);
+
+      selection?.removeAllRanges();
+      selection?.addRange(range);
+    }
+  }
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4 backdrop-blur-[2px]"
       onClick={onClose}
     >
       <div
-        className={`flex max-h-[85vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl shadow-2xl ${style.background} ${style.text}`}
-        onClick={(event) =>
-          event.stopPropagation()
-        }
+        ref={viewerRef}
+        tabIndex={0}
+        onKeyDown={handleSelectAll}
+        className={`flex max-h-[85vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl shadow-2xl outline-none ${style.background} ${style.text}`}
+        onClick={(event) => event.stopPropagation()}
       >
         {/* Header */}
 
@@ -228,7 +270,7 @@ function ContentViewer({
             onClick={onClose}
             className="flex h-8 w-8 items-center justify-center rounded-full bg-black/5 text-lg opacity-60 transition hover:bg-black/10 hover:opacity-100"
           >
-            ×
+            <X size={24} color="currentColor" strokeWidth={2} />
           </button>
         </div>
 
@@ -238,8 +280,6 @@ function ContentViewer({
           <h1 className="break-words text-2xl font-semibold leading-tight tracking-tight sm:text-3xl">
             {content.title}
           </h1>
-
-          {/* URL */}
 
           {content.link && (
             <a
@@ -252,11 +292,14 @@ function ContentViewer({
             </a>
           )}
 
-          {/* Note body */}
+          {/* ONLY THIS PART GETS SELECTED BY CTRL+A */}
 
           {content.type === "note" &&
             content.body?.content && (
-              <div className="mt-8 text-[15px] leading-7 opacity-80 [&_p]:text-justify">
+              <div
+                ref={contentRef}
+                className="mt-8 text-[15px] leading-7 opacity-80 [&_p]:text-justify"
+              >
                 {content.body.content.map(
                   (node: any, index: number) => (
                     <div key={index}>
@@ -313,179 +356,185 @@ function ContentViewer({
 function ContentCard({
   content,
   onDelete,
+  openContentId,
+  onUpdated,
 }: ContentCardProps) {
-  const [showViewer, setShowViewer] =
-    useState(false);
+  {
+    const [showViewer, setShowViewer] =
+      useState(false);
 
-  const [showEdit, setShowEdit] =
-    useState(false);
+    const [showEdit, setShowEdit] =
+      useState(false);
 
-  const [showShareNote, setShowShareNote] =
-    useState(false);
+    const [showShareNote, setShowShareNote] =
+      useState(false);
 
-  const [showDeleteModal, setShowDeleteModal] =
-    useState(false);
+    const [showDeleteModal, setShowDeleteModal] =
+      useState(false);
 
-  const [deleting, setDeleting] =
-    useState(false);
+    const [deleting, setDeleting] =
+      useState(false);
 
-  const style = contentStyles[content.type];
+    const style = contentStyles[content.type];
 
-  const spanTwoRows =
-    shouldSpanTwoRows(content);
+    const spanTwoRows =
+      shouldSpanTwoRows(content);
 
-  function handleDelete() {
-    setShowDeleteModal(true);
-  }
-
-  function handleConfirmDelete() {
-    setDeleting(true);
-
-    try {
-      onDelete(content._id);
-
-      setShowDeleteModal(false);
-      setShowViewer(false);
-    } finally {
-      setDeleting(false);
+    function handleDelete() {
+      setShowDeleteModal(true);
     }
-  }
 
-  return (
-    <>
-      {/* Card */}
+    function handleConfirmDelete() {
+      setDeleting(true);
 
-      <article
-        onClick={() => setShowViewer(true)}
-        className={`group flex min-h-[180px] cursor-pointer flex-col rounded-xl p-4 transition-shadow duration-200 hover:shadow-lg md:min-h-[210px] md:p-5 ${
-          style.background
-        } ${style.text} ${
-          spanTwoRows
-            ? "md:row-span-2"
-            : ""
-        }`}
-      >
-        {/* Icon + date */}
+      try {
+        onDelete(content._id);
 
-        <div className="flex items-center justify-between">
-          <img
-            src={style.icon}
-            alt=""
-            className="h-5 w-5 object-contain opacity-70"
-          />
+        setShowDeleteModal(false);
+        setShowViewer(false);
+      } finally {
+        setDeleting(false);
+      }
+    }
 
-          <span className="text-xs opacity-40">
-            {formatDate(content.createdAt)}
-          </span>
-        </div>
+    useEffect(() => {
+      if (openContentId === content._id) {
+        setShowViewer(true);
+      }
+    }, [openContentId, content._id]);
 
-        {/* Main content */}
+    return (
+      <>
+        {/* Card */}
 
-        <div
-          className={`mt-6 ${
-            spanTwoRows
+        <article
+          onClick={() => setShowViewer(true)}
+          className={`group flex min-h-[180px] cursor-pointer flex-col rounded-xl p-4 transition-shadow duration-200 hover:shadow-lg md:min-h-[210px] md:p-5 ${style.background
+            } ${style.text} ${spanTwoRows
+              ? "md:row-span-2"
+              : ""
+            }`}
+        >
+          {/* Icon + date */}
+
+          <div className="flex items-center justify-between">
+            <img
+              src={style.icon}
+              alt=""
+              className="h-5 w-5 object-contain opacity-70"
+            />
+
+            <span className="text-xs opacity-40">
+              {formatDate(content.createdAt)}
+            </span>
+          </div>
+
+          {/* Main content */}
+
+          <div
+            className={`mt-6 ${spanTwoRows
               ? "md:flex md:flex-1 md:flex-col"
               : ""
-          }`}
-        >
-          <h2 className="break-words text-base font-medium leading-6 tracking-[-0.01em] md:leading-7">
-            {content.title}
-          </h2>
+              }`}
+          >
+            <h2 className="break-words text-base font-medium leading-6 tracking-[-0.01em] md:leading-7">
+              {content.title}
+            </h2>
 
-          {/* Note preview */}
+            {/* Note preview */}
 
-          {content.type === "note" && (
-            <p
-              className={`mt-3 overflow-hidden text-sm leading-5 opacity-60 md:leading-6 ${
-                spanTwoRows
+            {content.type === "note" && (
+              <p
+                className={`mt-3 overflow-hidden text-sm leading-5 opacity-60 md:leading-6 ${spanTwoRows
                   ? "line-clamp-3 md:line-clamp-10"
                   : "line-clamp-3"
-              }`}
-            >
-              {getNotePreview(content.body)}
-            </p>
-          )}
+                  }`}
+              >
+                {getNotePreview(content.body)}
+              </p>
+            )}
 
-          {/* URL */}
+            {/* URL */}
 
-          {content.link && (
-            <a
-              href={content.link}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={(event) =>
-                event.stopPropagation()
-              }
-              className={`mt-3 block truncate text-sm underline decoration-current/20 underline-offset-4 ${style.muted} transition hover:opacity-100`}
-            >
-              {content.link}
-            </a>
-          )}
-        </div>
-      </article>
+            {content.link && (
+              <a
+                href={content.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(event) =>
+                  event.stopPropagation()
+                }
+                className={`mt-3 block truncate text-sm underline decoration-current/20 underline-offset-4 ${style.muted} transition hover:opacity-100`}
+              >
+                {content.link}
+              </a>
+            )}
+          </div>
+        </article>
 
-      {/* Content viewer */}
+        {/* Content viewer */}
 
-      {showViewer && (
-        <ContentViewer
-          content={content}
-          onClose={() =>
-            setShowViewer(false)
-          }
-          onEdit={() => {
-            setShowViewer(false);
-            setShowEdit(true);
+        {showViewer && (
+          <ContentViewer
+            content={content}
+            onClose={() =>
+              setShowViewer(false)
+            }
+            onEdit={() => {
+              setShowViewer(false);
+              setShowEdit(true);
+            }}
+            onDelete={handleDelete}
+            onShare={() => {
+              setShowViewer(false);
+              setShowShareNote(true);
+            }}
+          />
+        )}
+
+        {/* Delete confirmation */}
+
+        <ConfirmModal
+          open={showDeleteModal}
+          title="Delete this content?"
+          message="This saved content will be permanently deleted. This action cannot be undone."
+          confirmText="Delete"
+          loading={deleting}
+          onCancel={() => {
+            if (!deleting) {
+              setShowDeleteModal(false);
+            }
           }}
-          onDelete={handleDelete}
-          onShare={() => {
-            setShowViewer(false);
-            setShowShareNote(true);
-          }}
+          onConfirm={handleConfirmDelete}
         />
-      )}
 
-      {/* Delete confirmation */}
+        {/* Edit */}
 
-      <ConfirmModal
-        open={showDeleteModal}
-        title="Delete this content?"
-        message="This saved content will be permanently deleted. This action cannot be undone."
-        confirmText="Delete"
-        loading={deleting}
-        onCancel={() => {
-          if (!deleting) {
-            setShowDeleteModal(false);
-          }
-        }}
-        onConfirm={handleConfirmDelete}
-      />
+        {showEdit && (
+          <EditContentModal
+            content={content}
+            onClose={() =>
+              setShowEdit(false)
+            }
+            onUpdated={(updatedContent) => {
+              setShowEdit(false);
+              onUpdated(updatedContent);
+            }}
+          />
+        )}
 
-      {/* Edit */}
+        {/* Share note */}
 
-      {showEdit && (
-        <EditContentModal
-          content={content}
-          onClose={() =>
-            setShowEdit(false)
-          }
-          onUpdated={() => {
-            window.location.reload();
-          }}
-        />
-      )}
-
-      {/* Share note */}
-
-      {showShareNote && (
-        <ShareNoteModal
-          contentId={content._id}
-          onClose={() =>
-            setShowShareNote(false)
-          }
-        />
-      )}
-    </>
-  );
+        {showShareNote && (
+          <ShareNoteModal
+            contentId={content._id}
+            onClose={() =>
+              setShowShareNote(false)
+            }
+          />
+        )}
+      </>
+    );
+  }
 }
-
 export default ContentCard;

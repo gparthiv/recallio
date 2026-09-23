@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
+import { X } from 'lucide-react';
 
 interface SearchBrainModalProps {
   onClose: () => void;
@@ -45,7 +46,7 @@ export default function SearchBrainModal({
             className="flex h-8 w-8 items-center justify-center rounded-full text-xl leading-none text-muted transition hover:bg-surface-soft hover:text-text"
             aria-label="Close"
           >
-            ×
+            <X size={24} color="currentColor" strokeWidth={2} />
           </button>
         </div>
 

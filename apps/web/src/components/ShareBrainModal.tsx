@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { shareBrain } from "../api/brain.api";
+import { X } from 'lucide-react';
 
 type ShareBrainModalProps = {
   onClose: () => void;
@@ -26,7 +27,7 @@ function ShareBrainModal({
     } catch (err: any) {
       setError(
         err.response?.data?.message ||
-          "Unable to create sharing link."
+        "Unable to create sharing link."
       );
     } finally {
       setLoading(false);
@@ -44,7 +45,7 @@ function ShareBrainModal({
     } catch (err: any) {
       setError(
         err.response?.data?.message ||
-          "Unable to disable sharing."
+        "Unable to disable sharing."
       );
     } finally {
       setLoading(false);
@@ -90,7 +91,7 @@ function ShareBrainModal({
             className="flex h-8 w-8 items-center justify-center rounded-full text-xl leading-none text-muted transition hover:bg-surface-soft hover:text-text"
             aria-label="Close"
           >
-            ×
+            <X size={24} color="currentColor" strokeWidth={2} />
           </button>
         </div>
 

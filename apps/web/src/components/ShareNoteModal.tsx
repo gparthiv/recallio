@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { shareNote } from "../api/note.api";
+import { X } from 'lucide-react';
 
 type ShareNoteModalProps = {
   contentId: string;
@@ -92,7 +93,7 @@ function ShareNoteModal({
             className="flex h-8 w-8 items-center justify-center rounded-full text-xl leading-none text-muted transition hover:bg-surface-soft hover:text-text"
             aria-label="Close"
           >
-            ×
+            <X size={24} color="currentColor" strokeWidth={2} />
           </button>
         </div>
 

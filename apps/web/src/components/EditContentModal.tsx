@@ -5,6 +5,7 @@ import {
   contentStyles,
   type ContentType,
 } from "../config/contentStyles";
+import { X } from 'lucide-react';
 
 interface Content {
   _id: string;
@@ -132,7 +133,7 @@ export default function EditContentModal({
             className={`flex h-8 w-8 items-center justify-center rounded-full transition hover:bg-white/60 ${style.text}`}
             aria-label="Close"
           >
-            ×
+            <X size={24} color="currentColor" strokeWidth={2} />
           </button>
         </div>
 

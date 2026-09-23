@@ -5,6 +5,7 @@ import {
   contentStyles,
   type ContentType,
 } from "../config/contentStyles";
+import { X } from 'lucide-react';
 
 interface AddContentModalProps {
   onClose: () => void;
@@ -123,7 +124,7 @@ export default function AddContentModal({
             className="flex h-8 w-8 items-center justify-center rounded-full text-xl text-muted transition hover:bg-surface-soft hover:text-text"
             aria-label="Close"
           >
-            ×
+            <X size={24} color="currentColor" strokeWidth={2} />
           </button>
         </div>
 

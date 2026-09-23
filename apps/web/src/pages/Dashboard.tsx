@@ -1,10 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
 import { getContent, deleteContent } from "../api/content.api";
+import { X } from 'lucide-react';
 import ContentCard from "../components/ContentCard";
 import AddContentModal from "../components/AddContentModal";
 import ShareBrainModal from "../components/ShareBrainModal";
 import SearchBrainModal from "../components/SearchBrainModal";
 import AccountMenu from "../components/AccountMenu";
+
+import SynaLauncher from "../components/syna/SynaLauncher";
+import SynaChat from "../components/syna/SynaChat";
+
+import { getToken } from "../utils/auth";
+
 import {
   contentStyles,
   type ContentType,
@@ -62,9 +69,23 @@ export default function Dashboard() {
   const [showSearchBrain, setShowSearchBrain] =
     useState(false);
 
-  const loadContent = async () => {
+  const [openContentId, setOpenContentId] =
+    useState<string | null>(null);
+
+  const [isSynaOpen, setIsSynaOpen] =
+    useState(false);
+
+  const [isSynaExpanded, setIsSynaExpanded] =
+    useState(false);
+
+  const loadContent = async (
+    showLoading = true
+  ) => {
     try {
-      setLoading(true);
+      if (showLoading) {
+        setLoading(true);
+      }
+
       setError("");
 
       const data = await getContent();
@@ -75,15 +96,34 @@ export default function Dashboard() {
 
       setError(
         err.response?.data?.message ||
-          "Unable to load your saved content."
+        "Unable to load your saved content."
       );
     } finally {
-      setLoading(false);
+      if (showLoading) {
+        setLoading(false);
+      }
     }
   };
 
   useEffect(() => {
     loadContent();
+
+    const handleFocus = () => {
+      setOpenContentId(null);
+      loadContent();
+    };
+
+    window.addEventListener(
+      "focus",
+      handleFocus
+    );
+
+    return () => {
+      window.removeEventListener(
+        "focus",
+        handleFocus
+      );
+    };
   }, []);
 
   const filteredContent = useMemo(() => {
@@ -110,9 +150,21 @@ export default function Dashboard() {
 
       setError(
         err.response?.data?.message ||
-          "Unable to delete this content."
+        "Unable to delete this content."
       );
     }
+  };
+
+  const handleContentUpdated = (
+    updatedContent: Content
+  ) => {
+    setContent((current) =>
+      current.map((item) =>
+        item._id === updatedContent._id
+          ? updatedContent
+          : item
+      )
+    );
   };
 
   const visibleFilters = filters.filter((filter) => {
@@ -124,6 +176,20 @@ export default function Dashboard() {
       (item) => item.type === filter.value
     );
   });
+
+  function handleSynaSourceClick(contentId: string) {
+    setOpenContentId(contentId);
+  }
+
+  function handleSynaClose() {
+    setIsSynaOpen(false);
+    setIsSynaExpanded(false);
+    setOpenContentId(null);
+  }
+
+  function handleSynaToggleExpand() {
+    setIsSynaExpanded((current) => !current);
+  }
 
   return (
     <div className="min-h-screen bg-background text-text">
@@ -141,7 +207,7 @@ export default function Dashboard() {
               className="shrink-0 text-lg leading-none text-red-500 transition hover:text-red-700"
               aria-label="Close"
             >
-              ×
+              <X size={24} color="currentColor" strokeWidth={2} />
             </button>
           </div>
         </div>
@@ -185,11 +251,24 @@ export default function Dashboard() {
         </div>
       </header>
 
-      <main className="mx-auto grid max-w-[1500px] grid-cols-1 lg:grid-cols-[220px_minmax(0,1fr)]">
+      <main
+        className={`
+    mx-auto
+    grid
+    max-w-[1500px]
+    grid-cols-1
+    ${isSynaOpen
+            ? isSynaExpanded
+              ? "lg:grid-cols-[220px_minmax(0,1fr)_760px]"
+              : "lg:grid-cols-[220px_minmax(0,1fr)_420px]"
+            : "lg:grid-cols-[220px_minmax(0,1fr)]"
+          }
+  `}
+      >
 
         {/* Sidebar */}
 
-        <aside className="sticky top-[88px] hidden h-[calc(100vh-88px)] overflow-y-auto px-5 py-8 lg:block">
+        <aside className="content-scroll sticky top-[88px] hidden h-[calc(100vh-88px)] overflow-y-auto px-5 py-8 lg:block">
 
           <nav className="space-y-1">
 
@@ -201,9 +280,8 @@ export default function Dashboard() {
                 filter.value === "all"
                   ? content.length
                   : content.filter(
-                      (item) =>
-                        item.type === filter.value
-                    ).length;
+                    (item) => item.type === filter.value
+                  ).length;
 
               return (
                 <button
@@ -212,21 +290,15 @@ export default function Dashboard() {
                   onClick={() =>
                     setActiveFilter(filter.value)
                   }
-                  className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition ${
-                    active
+                  className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition ${active
                       ? "bg-primary font-medium text-white"
                       : "text-muted hover:bg-surface-soft hover:text-text"
-                  }`}
+                    }`}
                 >
                   <span className="flex items-center gap-2">
-
                     {filter.value !== "all" && (
                       <img
-                        src={
-                          contentStyles[
-                            filter.value
-                          ].icon
-                        }
+                        src={contentStyles[filter.value].icon}
                         alt=""
                         className="h-4 w-4 object-contain"
                       />
@@ -236,11 +308,10 @@ export default function Dashboard() {
                   </span>
 
                   <span
-                    className={`text-xs ${
-                      active
+                    className={`text-xs ${active
                         ? "text-white/70"
                         : "text-muted"
-                    }`}
+                      }`}
                   >
                     {count}
                   </span>
@@ -281,11 +352,10 @@ export default function Dashboard() {
                     onClick={() =>
                       setActiveFilter(filter.value)
                     }
-                    className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium transition-shadow ${
-                      active
-                        ? "bg-primary text-white"
-                        : "bg-surface-soft text-muted hover:text-text"
-                    }`}
+                    className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium transition-shadow ${active
+                      ? "bg-primary text-white"
+                      : "bg-surface-soft text-muted hover:text-text"
+                      }`}
                   >
 
                     {filter.value !== "all" && (
@@ -346,7 +416,7 @@ export default function Dashboard() {
 
               <button
                 type="button"
-                onClick={loadContent}
+                onClick={() => loadContent()}
                 className="mt-3 text-xs font-semibold text-red-800 underline underline-offset-4"
               >
                 Try again
@@ -392,13 +462,30 @@ export default function Dashboard() {
           {!loading &&
             !error &&
             filteredContent.length > 0 && (
-              <div className="grid grid-cols-2 auto-rows-[180px] gap-3 md:grid-cols-2 md:auto-rows-[210px] md:gap-4 xl:grid-cols-3">
+              <div
+                className={`
+    grid
+    grid-cols-2
+    auto-rows-[180px]
+    gap-3
+    md:auto-rows-[210px]
+    md:gap-4
+    ${!isSynaOpen
+                    ? "xl:grid-cols-3"
+                    : isSynaExpanded
+                      ? "xl:grid-cols-1"
+                      : "xl:grid-cols-2"
+                  }
+  `}
+              >
 
                 {filteredContent.map((item) => (
                   <ContentCard
                     key={item._id}
                     content={item}
                     onDelete={handleDelete}
+                    openContentId={openContentId}
+                    onUpdated={handleContentUpdated}
                   />
                 ))}
 
@@ -406,7 +493,62 @@ export default function Dashboard() {
             )}
 
         </section>
+        {isSynaOpen && (
+          <aside
+            className="
+      hidden
+      min-h-0
+      lg:sticky
+      lg:top-[88px]
+      lg:block
+      lg:h-[calc(100vh-88px)]
+      lg:min-w-0
+      lg:p-4
+      lg:pl-0
+    "
+          >
+            <SynaChat
+              expanded={isSynaExpanded}
+              onToggleExpand={handleSynaToggleExpand}
+              onClose={handleSynaClose}
+              token={getToken() || ""}
+              onSourceClick={handleSynaSourceClick}
+            />
+          </aside>
+        )}
       </main>
+
+      {!isSynaOpen && (
+        <SynaLauncher
+          onClick={() => {
+            setOpenContentId(null);
+            setIsSynaOpen(true);
+          }}
+        />
+      )}
+
+      {isSynaOpen && (
+        <div
+          className="
+      fixed
+      inset-x-0
+      bottom-0
+      top-[88px]
+      z-[100]
+      p-2
+      lg:hidden
+    "
+        >
+          <SynaChat
+            expanded={isSynaExpanded}
+            onToggleExpand={handleSynaToggleExpand}
+            onClose={handleSynaClose}
+            token={getToken() || ""}
+            onSourceClick={handleSynaSourceClick}
+          />
+        </div>
+      )}
+
 
       {/* Modals */}
 
@@ -415,7 +557,7 @@ export default function Dashboard() {
           onClose={() =>
             setShowAddContent(false)
           }
-          onAdded={loadContent}
+          onAdded={() => loadContent(false)}
         />
       )}
 
