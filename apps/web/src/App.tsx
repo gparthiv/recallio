@@ -10,6 +10,7 @@ import Dashboard from "./pages/Dashboard";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import SharedBrain from "./pages/SharedBrain";
 import SharedNote from "./pages/SharedNote";
+// import SynaTest from "./pages/SynaTest";
 
 function App() {
   return (
@@ -33,7 +34,7 @@ function App() {
         path="/brain/:shareLink"
         element={<SharedBrain />}
       />
-      
+
       <Route
         path="/note/share/:shareLink"
         element={<SharedNote />}
@@ -44,6 +45,11 @@ function App() {
           path="/dashboard"
           element={<Dashboard />}
         />
+{/* 
+        <Route
+          path="/syna-test"
+          element={<SynaTest />}
+        /> */}
       </Route>
 
       <Route

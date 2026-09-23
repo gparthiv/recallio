@@ -242,3 +242,27 @@ select {
 .content-scroll::-webkit-scrollbar-thumb:hover {
   background: rgba(35, 29, 21, 0.35);
 }
+
+/* Global application scrollbar */
+
+html {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(35, 29, 21, 0.2) transparent;
+}
+
+html::-webkit-scrollbar {
+  width: 8px;
+}
+
+html::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+html::-webkit-scrollbar-thumb {
+  background: rgba(35, 29, 21, 0.2);
+  border-radius: 999px;
+}
+
+html::-webkit-scrollbar-thumb:hover {
+  background: rgba(35, 29, 21, 0.35);
+}
