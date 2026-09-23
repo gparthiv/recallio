@@ -46,7 +46,7 @@ export function detectContentType(url: string): ContentType {
 
     // Facebook
     if (hostname === "facebook.com" ||
-        hostname === "fb.com") {
+      hostname === "fb.com") {
       return "facebook";
     }
 
@@ -106,12 +106,13 @@ export function detectContentType(url: string): ContentType {
 
     // OpenAI
     if (
+      hostname === "chatgpt.com" ||
+      hostname.endsWith(".chatgpt.com") ||
       hostname === "openai.com" ||
       hostname.endsWith(".openai.com")
     ) {
       return "openai";
     }
-
     // Claude
     if (
       hostname === "claude.ai" ||

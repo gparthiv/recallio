@@ -76,6 +76,11 @@ chrome.contextMenus.onClicked.addListener(
         const selection =
           results[0]?.result;
 
+        console.log(
+          "RAW SCRIPT RESULT:",
+          selection
+        );
+
         if (selection) {
           selectedText =
             selection.text ||
@@ -93,6 +98,11 @@ chrome.contextMenus.onClicked.addListener(
         console.log(
           "Selected HTML:",
           selectedHtml
+        );
+
+        console.log(
+          "Selected HTML length:",
+          selectedHtml.length
         );
       } catch (error) {
         console.error(
@@ -208,7 +218,7 @@ chrome.contextMenus.onClicked.addListener(
         data
       );
 
-      
+
     } catch (error) {
       console.error(
         "Network error:",

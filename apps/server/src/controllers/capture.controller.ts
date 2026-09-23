@@ -39,6 +39,21 @@ export const captureContent = async (
       type,
     } = req.body;
 
+    console.log("\n==============================");
+    console.log("SYNAPSE CAPTURE");
+    console.log("==============================");
+    console.log("URL:", url);
+    console.log("Page title:", pageTitle);
+    console.log("Requested type:", type);
+    console.log(
+      "Selected text length:",
+      selectedText?.length || 0
+    );
+    console.log(
+      "Selected HTML length:",
+      selectedHtml?.length || 0
+    );
+
     if (!url) {
       return res.status(400).json({
         message: "URL is required",
@@ -55,6 +70,11 @@ export const captureContent = async (
       ? type
       : "link";
 
+    console.log(
+      "Final content type:",
+      contentType
+    );
+
     let body = null;
 
     /*
@@ -64,7 +84,21 @@ export const captureContent = async (
       /*
        * First try AI formatting.
        */
-      if (selectedHtml?.trim()) {
+      if (
+        selectedHtml?.trim() ||
+        selectedText?.trim()
+      ) {
+        console.log("\n--- AI FORMAT ---");
+        console.log(
+          "AI service:",
+          AI_SERVICE_URL
+        );
+
+        console.log(
+          "HTML preview:",
+          selectedHtml.slice(0, 500)
+        );
+
         try {
           const aiResponse = await fetch(
             `${AI_SERVICE_URL}/format`,
@@ -75,38 +109,81 @@ export const captureContent = async (
               },
               body: JSON.stringify({
                 text: selectedText || "",
-                html: selectedHtml,
+                html: selectedHtml || "",
                 page_title: pageTitle || "",
                 source_url: url,
               }),
             }
           );
 
+          console.log(
+            "AI format status:",
+            aiResponse.status
+          );
+
+          const responseText =
+            await aiResponse.text();
+
+          console.log(
+            "AI format response preview:",
+            responseText.slice(0, 1000)
+          );
+
           if (aiResponse.ok) {
-            const aiData = await aiResponse.json();
+            try {
+              const aiData =
+                JSON.parse(responseText);
 
-            body = aiData.document;
+              if (
+                aiData?.document &&
+                aiData.document.type === "doc"
+              ) {
+                body = aiData.document;
 
-            console.log(
-              "AI formatting successful"
-            );
+                console.log(
+                  "AI formatting successful"
+                );
+
+                console.log(
+                  "AI document:",
+                  JSON.stringify(
+                    body,
+                    null,
+                    2
+                  ).slice(0, 3000)
+                );
+              } else {
+                console.error(
+                  "AI formatting returned invalid document"
+                );
+              }
+            } catch (error) {
+              console.error(
+                "Could not parse AI format response:",
+                error
+              );
+            }
           } else {
             console.error(
               "AI formatting failed:",
-              await aiResponse.text()
+              responseText
             );
           }
         } catch (error) {
           console.error(
-            "AI service unavailable:",
+            "AI formatting unavailable:",
             error
           );
         }
+      } else {
+        console.log(
+          "No selected HTML available; skipping AI formatting"
+        );
       }
 
       /*
        * Fallback 1:
-       * Use our deterministic HTML → Tiptap converter.
+       * Deterministic HTML → Tiptap converter.
        */
       if (!body && selectedHtml?.trim()) {
         console.log(
@@ -114,11 +191,20 @@ export const captureContent = async (
         );
 
         body = htmlToTiptap(selectedHtml);
+
+        console.log(
+          "HTML fallback document:",
+          JSON.stringify(
+            body,
+            null,
+            2
+          ).slice(0, 3000)
+        );
       }
 
       /*
        * Fallback 2:
-       * Save plain text as a Tiptap paragraph.
+       * Plain text → Tiptap paragraph.
        */
       if (!body && selectedText?.trim()) {
         console.log(
@@ -142,13 +228,35 @@ export const captureContent = async (
       }
     }
 
+    /*
+     * AI title generation.
+     */
     let generatedTitle: string | null = null;
 
+    console.log("\n--- AI AUTOFILL ---");
+
     try {
-      const autofillText =
-        selectedText?.trim() ||
-        pageTitle?.trim() ||
-        url;
+      const autofillText = [
+        selectedText?.trim(),
+        pageTitle?.trim()
+          ? `Page title: ${pageTitle.trim()}`
+          : "",
+        url
+          ? `Source URL: ${url}`
+          : "",
+      ]
+        .filter(Boolean)
+        .join("\n\n");
+
+      console.log(
+        "AI service:",
+        AI_SERVICE_URL
+      );
+
+      console.log(
+        "Text sent to AI:",
+        autofillText.slice(0, 3000)
+      );
 
       const aiResponse = await fetch(
         `${AI_SERVICE_URL}/autofill`,
@@ -166,24 +274,50 @@ export const captureContent = async (
         }
       );
 
+      console.log(
+        "AI autofill status:",
+        aiResponse.status
+      );
+
+      const responseText =
+        await aiResponse.text();
+
+      console.log(
+        "AI autofill response:",
+        responseText.slice(0, 1000)
+      );
+
       if (aiResponse.ok) {
-        const aiData = await aiResponse.json();
+        try {
+          const aiData =
+            JSON.parse(responseText);
 
-        if (
-          typeof aiData.title === "string" &&
-          aiData.title.trim()
-        ) {
-          generatedTitle = aiData.title.trim();
+          if (
+            typeof aiData.title === "string" &&
+            aiData.title.trim()
+          ) {
+            generatedTitle =
+              aiData.title.trim();
 
-          console.log(
-            "AI title generated:",
-            generatedTitle
+            console.log(
+              "AI title generated:",
+              generatedTitle
+            );
+          } else {
+            console.error(
+              "AI autofill returned no valid title"
+            );
+          }
+        } catch (error) {
+          console.error(
+            "Could not parse AI autofill response:",
+            error
           );
         }
       } else {
         console.error(
           "AI autofill failed:",
-          await aiResponse.text()
+          responseText
         );
       }
     } catch (error) {
@@ -193,16 +327,36 @@ export const captureContent = async (
       );
     }
 
+    /*
+     * Final fallback title.
+     */
+    const finalTitle =
+      generatedTitle ||
+      pageTitle?.trim() ||
+      url;
+
+    console.log(
+      "\nFinal title:",
+      finalTitle
+    );
+
+    /*
+     * Save to MongoDB.
+     */
     const content = await Content.create({
       userId: req.userId,
       type: contentType,
       link: url,
-      title:
-        generatedTitle ||
-        pageTitle ||
-        url,
+      title: finalTitle,
       body,
     });
+
+    console.log(
+      "Content saved:",
+      content._id
+    );
+
+    console.log("==============================\n");
 
     return res.status(201).json({
       message: "Saved to Synapse",
