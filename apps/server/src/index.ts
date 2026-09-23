@@ -3,7 +3,7 @@ dotenv.config();
 
 import express from "express";
 import cors from "cors";
-
+import ragRoutes from "./routes/rag.routes.js";
 import { connectDB } from "./db.js";
 import authRoutes from "./routes/auth.routes.js"
 import contentRoutes from "./routes/content.routes.js";
@@ -25,8 +25,8 @@ app
   .use("/api/v1/content", contentRoutes)
   .use("/api/v1/brain", brainRoutes)
   .use("/api/v1/note", noteRoutes)
-  .use("/api/v1/capture", captureRoutes);
-
+  .use("/api/v1/capture", captureRoutes)
+  .use("/api/v1/rag", ragRoutes);
 async function startServer() {
   await connectDB();
 

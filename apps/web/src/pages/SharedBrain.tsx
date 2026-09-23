@@ -7,6 +7,7 @@ import {
   type ContentType,
 } from "../config/contentStyles";
 import backIcon from "../assets/back.svg";
+import { X } from 'lucide-react';
 
 type SharedContent = {
   id: string;
@@ -395,7 +396,7 @@ function SharedBrain() {
                     }
                     className="rounded-lg px-2 py-1 text-xl leading-none opacity-50 transition hover:bg-black/5 hover:opacity-100"
                   >
-                    ×
+                    <X size={24} color="currentColor" strokeWidth={2} />
                   </button>
 
                 </div>
